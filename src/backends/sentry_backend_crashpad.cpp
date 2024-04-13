@@ -601,4 +601,36 @@ sentry__backend_new(void)
 
     return backend;
 }
+
+#ifdef SENTRY_PLATFORM_WINDOWS
+int
+crashpad_start_handler(const char *productName, const char *productVersion,
+    const char *handlerFilePath, const char *databaseDirectoryPath)
+{
+    base::FilePath handler(sentry__path_from_str(handlerFilePath)->path);
+    base::FilePath reportsDirectory(
+        sentry__path_from_str(databaseDirectoryPath)->path);
+
+    std::map<std::string, std::string> annotations;
+    annotations["format"] = "minidump";
+    annotations["database"] = "NIERLocalErrorReportDatabase";
+    annotations["product"] = productName;
+    annotations["version"] = productVersion;
+
+    // Disable crashpad rate limiting so that all crashes have dmp files
+    std::vector<std::string> arguments { "--no-rate-limit" };
+
+    auto database = crashpad::CrashReportDatabase::Initialize(reportsDirectory);
+    if (!database)
+        return 1;
+
+    auto client = new crashpad::CrashpadClient();
+    auto status = client->StartHandler(handler, reportsDirectory,
+        reportsDirectory /*metrics_dir*/, "" /*url*/, "" /*http_proxy*/,
+        annotations, arguments, true /*restartable*/,
+        false /*asynchronous_start*/);
+
+    return status ? 0 : 1;
+}
+#endif
 }

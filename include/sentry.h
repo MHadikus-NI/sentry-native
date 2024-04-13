@@ -2032,6 +2032,16 @@ SENTRY_EXPERIMENTAL_API const char *sentry_sdk_name(void);
  */
 SENTRY_EXPERIMENTAL_API const char *sentry_sdk_user_agent(void);
 
+#ifdef SENTRY_PLATFORM_WINDOWS
+/**
+ * Starts the crashpad handler.
+ * Returns 0 on success, 1 on error.
+ */
+SENTRY_EXPERIMENTAL_API int crashpad_start_handler(const char *productName,
+    const char *productVersion, const char *handlerFilePath,
+    const char *databaseDirectoryPath);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
