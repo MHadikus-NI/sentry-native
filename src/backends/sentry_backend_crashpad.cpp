@@ -620,12 +620,13 @@ crashpad_start_handler(const char *productName, const char *productVersion,
     // Disable crashpad rate limiting so that all crashes have dmp files
     std::vector<std::string> arguments { "--no-rate-limit" };
 
-    auto database = crashpad::CrashReportDatabase::Initialize(reportsDirectory);
+    std::unique_ptr<crashpad::CrashReportDatabase> database
+        = crashpad::CrashReportDatabase::Initialize(reportsDirectory);
     if (!database)
         return 1;
 
-    auto client = new crashpad::CrashpadClient();
-    auto status = client->StartHandler(handler, reportsDirectory,
+    crashpad::CrashpadClient client;
+    auto status = client.StartHandler(handler, reportsDirectory,
         reportsDirectory /*metrics_dir*/, "" /*url*/, "" /*http_proxy*/,
         annotations, arguments, true /*restartable*/,
         false /*asynchronous_start*/);
